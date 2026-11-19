@@ -57,7 +57,7 @@ class CeviriMotoru(
 			.setTargetLanguage(TranslateLanguage.TURKISH)
 			.build())
 
-	private val dublaj = Dublaj(context, ayarlar)
+	private val dublaj = ElevenLabsDublaj(context, ayarlar)
 
 	/** Bir kez çevrilen yazı tekrar çevrilmez: menüler, eşya adları anında gelir. */
 	private val onbellek = object: LinkedHashMap<String, String>(256, 0.75f, true)
@@ -206,7 +206,7 @@ class CeviriMotoru(
 			return
 		val sirali = parcalar.sortedBy { it.boundingBox?.top ?: 0 }
 		val ham = temizle(sirali.joinToString(" ") { it.text })
-		val metin = konusmaciAdiniAyikla(ham)
+		val (konusmaci, metin) = konusmaciyiAyir(ham)
 		if(metin.length < 2)
 			return
 		// OCR titremesinde aynı satırı iki kez okumamak için benzerlik kontrolü
@@ -216,9 +216,9 @@ class CeviriMotoru(
 
 		val hazir = synchronized(onbellek) { onbellek[metin] }
 		if(hazir != null)
-			dublaj.oku(hazir)
+			dublaj.oku(hazir, konusmaci)
 		else
-			cevir(metin) { turkce -> if(sonAltyazi == metin) dublaj.oku(turkce) }
+			cevir(metin) { turkce -> if(sonAltyazi == metin) dublaj.oku(turkce, konusmaci) }
 	}
 
 	private fun altyaziBolgesindeMi(x: Float, y: Float, genislik: Float): Boolean
@@ -238,11 +238,11 @@ class CeviriMotoru(
 		return harf >= 2 && harf >= s.length * 0.5
 	}
 
-	/** "JOEL: Get down!" → "Get down!" */
-	private fun konusmaciAdiniAyikla(s: String): String
+	/** "JOEL: Get down!" → ("JOEL", "Get down!"). Ad yoksa konuşmacı null. */
+	private fun konusmaciyiAyir(s: String): Pair<String?, String>
 	{
-		val m = Regex("^([A-Z][A-Z .'\\-]{1,24}):\\s*(.+)$").find(s) ?: return s
-		return m.groupValues[2]
+		val m = Regex("^([A-Z][A-Za-z0-9 .'\\-]{0,24}):\\s*(.+)$").find(s) ?: return Pair(null, s)
+		return Pair(m.groupValues[1].trim(), m.groupValues[2])
 	}
 
 	private fun benzerlik(a: String, b: String): Double

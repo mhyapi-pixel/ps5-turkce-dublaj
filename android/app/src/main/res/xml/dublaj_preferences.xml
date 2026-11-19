@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="ElevenLabs">
+        <EditTextPreference
+            app:key="elevenlabs_anahtar"
+            app:title="ElevenLabs API anahtarı"
+            app:summary="elevenlabs.io → Developers → API Keys bölümünden alınır. Sadece bu cihazda saklanır."
+            app:dialogTitle="API anahtarını yapıştırın"/>
+
+        <ListPreference
+            app:key="ses_modeli"
+            app:title="Ses kalitesi"
+            app:summary="%s"
+            app:defaultValue="eleven_multilingual_v2"
+            app:entries="@array/dublaj_model_adlari"
+            app:entryValues="@array/dublaj_model_degerleri"/>
+
+        <ListPreference
+            app:key="anlatici_ses"
+            app:title="Anlatıcı sesi"
+            app:summary="%s"
+            app:defaultValue="XjeT2V2moeoWReDQKJU8"
+            app:entries="@array/dublaj_anlatici_adlari"
+            app:entryValues="@array/dublaj_anlatici_degerleri"/>
+
+        <ListPreference
+            app:key="konusma_hizi"
+            app:title="Konuşma hızı"
+            app:summary="%s"
+            app:defaultValue="1.08"
+            app:entries="@array/dublaj_hiz_adlari"
+            app:entryValues="@array/dublaj_hiz_degerleri"/>
+
+        <EditTextPreference
+            app:key="kadin_karakterler"
+            app:title="Kadın karakterler"
+            app:summary="Altyazıda adı geçen kadın karakterleri virgülle yazın (örn: Ellie, Abby). Bilinen karakterler zaten tanınır."
+            app:dialogTitle="Kadın karakter adları"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Ekran">
+        <SwitchPreference
+            app:key="dublaj"
+            app:title="Türkçe dublaj"
+            app:defaultValue="true"/>
+        <SwitchPreference
+            app:key="ekran_cevirisi"
+            app:title="Ekran çevirisi"
+            app:summary="Ekrandaki her İngilizce yazının üstüne Türkçesini yazar"
+            app:defaultValue="true"/>
+        <SwitchPreference
+            app:key="ustune_kapat"
+            app:title="İngilizceyi kapat"
+            app:summary="Türkçe yazı İngilizcenin tam üstünü örter"
+            app:defaultValue="false"/>
+    </PreferenceCategory>
+</PreferenceScreen>

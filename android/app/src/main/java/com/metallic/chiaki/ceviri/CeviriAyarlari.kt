@@ -7,7 +7,12 @@ import android.content.Context
 /** Türkçe çeviri ve dublaj ayarları (uygulama kapansa da hatırlanır). */
 class CeviriAyarlari(context: Context)
 {
-	private val sp = context.getSharedPreferences("turkce_dublaj", Context.MODE_PRIVATE)
+	companion object
+	{
+		const val DOSYA = "turkce_dublaj"
+	}
+
+	private val sp = context.getSharedPreferences(DOSYA, Context.MODE_PRIVATE)
 
 	/** Ekrandaki her İngilizce yazının üstüne Türkçesini yaz. */
 	var ekranCevirisi: Boolean
@@ -24,14 +29,28 @@ class CeviriAyarlari(context: Context)
 		get() = sp.getBoolean("ustune_kapat", false)
 		set(v) = sp.edit().putBoolean("ustune_kapat", v).apply()
 
-	/** Dublaj konuşma hızı (1.0 = normal). Altyazıya yetişmesi için varsayılan biraz hızlı. */
-	var konusmaHizi: Float
-		get() = sp.getFloat("konusma_hizi", 1.15f)
-		set(v) = sp.edit().putFloat("konusma_hizi", v).apply()
+	/** ElevenLabs API anahtarı (sadece bu cihazda saklanır). */
+	val elevenLabsAnahtari: String
+		get() = sp.getString("elevenlabs_anahtar", "")?.trim() ?: ""
 
+	/** ElevenLabs ses modeli. */
+	val sesModeli: String
+		get() = sp.getString("ses_modeli", "eleven_multilingual_v2") ?: "eleven_multilingual_v2"
+
+	/** Konuşma hızı (ElevenLabs: 0.7 – 1.2). */
+	val konusmaHizi: Float
+		get() = sp.getString("konusma_hizi", "1.08")?.toFloatOrNull() ?: 1.08f
+
+	/** Adı konuşmacı olarak geçmeyen satırları okuyan anlatıcı sesi. */
+	val anlaticiSesi: String
+		get() = sp.getString("anlatici_ses", ElevenLabsSesler.VARSAYILAN_ANLATICI) ?: ElevenLabsSesler.VARSAYILAN_ANLATICI
+
+	/** Kullanıcının kadın olarak işaretlediği karakter adları (virgülle). */
+	val kadinKarakterler: Set<String>
+		get() = (sp.getString("kadin_karakterler", "") ?: "")
+			.split(',').map { it.trim().uppercase() }.filter { it.isNotEmpty() }.toSet()
 
 	/** Ekranın alttan ne kadarı altyazı bölgesi sayılsın (0.30 = alt %30). */
-	var altyaziBolgesi: Float
+	val altyaziBolgesi: Float
 		get() = sp.getFloat("altyazi_bolgesi", 0.30f)
-		set(v) = sp.edit().putFloat("altyazi_bolgesi", v).apply()
 }

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="dublaj_model_adlari">
+        <item>En gerçekçi (Multilingual v2)</item>
+        <item>Dengeli (Turbo v2.5)</item>
+        <item>En hızlı (Flash v2.5)</item>
+    </string-array>
+    <string-array name="dublaj_model_degerleri">
+        <item>eleven_multilingual_v2</item>
+        <item>eleven_turbo_v2_5</item>
+        <item>eleven_flash_v2_5</item>
+    </string-array>
+
+    <string-array name="dublaj_anlatici_adlari">
+        <item>Akay – sinematik, oyun karakteri</item>
+        <item>Atakan – derin, enerjik</item>
+        <item>Alp – derin bariton</item>
+        <item>Celil – dramatik</item>
+        <item>Mimoza – genç kadın, enerjik</item>
+        <item>Cansu – sıcak kadın sesi</item>
+        <item>İrem – güçlü kadın sesi</item>
+    </string-array>
+    <string-array name="dublaj_anlatici_degerleri">
+        <item>XjeT2V2moeoWReDQKJU8</item>
+        <item>gsJ9nrlXYbPztJxC4fwc</item>
+        <item>HV5rAif1q1ITHdvxqyMw</item>
+        <item>Zpbxhg6LG47cY8y5BJrf</item>
+        <item>J2f0yzAg5MILTXuHmQvk</item>
+        <item>SMRHdMmNcA5RcHlk7xCP</item>
+        <item>uvU9jrgGLWNPeNA4NgNT</item>
+    </string-array>
+
+    <string-array name="dublaj_hiz_adlari">
+        <item>Normal</item>
+        <item>Biraz hızlı (önerilen)</item>
+        <item>Hızlı</item>
+    </string-array>
+    <string-array name="dublaj_hiz_degerleri">
+        <item>1.0</item>
+        <item>1.08</item>
+        <item>1.18</item>
+    </string-array>
+</resources>

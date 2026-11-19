@@ -36,6 +36,12 @@
                 />
         </provider>
 
+        <activity
+            android:name=".ceviri.DublajAyarlariActivity"
+            android:label="Türkçe Dublaj"
+            android:theme="@style/AppTheme"
+            android:exported="false"/>
+
         <activity android:name=".main.MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
             android:exported="true">

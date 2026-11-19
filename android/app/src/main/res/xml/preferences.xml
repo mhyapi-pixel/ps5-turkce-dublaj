@@ -6,6 +6,16 @@
         app:key="category_general"
         app:title="@string/preferences_category_title_general">
         <Preference
+            app:key="turkce_dublaj"
+            app:title="Türkçe Dublaj (ElevenLabs)"
+            app:summary="API anahtarı, ses kalitesi, anlatıcı sesi, karakterler"
+            app:icon="@drawable/ic_settings">
+            <intent
+                android:targetPackage="com.turkcedublaj.ps5"
+                android:targetClass="com.metallic.chiaki.ceviri.DublajAyarlariActivity"/>
+        </Preference>
+
+        <Preference
             app:key="registered_hosts"
             tools:summary="@string/preferences_registered_hosts_summary"
             app:summary=" "
