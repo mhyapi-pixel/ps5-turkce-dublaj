@@ -1,0 +1,70 @@
+name: Türkçe Dublaj APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python bağımlılıkları (nanopb)
+        run: pip install protobuf grpcio-tools setuptools
+
+      - name: Android NDK ve CMake
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: İmza ayarı
+        working-directory: android
+        run: |
+          cat > local.properties <<PROPS
+          sdk.dir=$ANDROID_HOME
+          chiakiKeystore=../imza/turkcedublaj.jks
+          chiakiKeystorePW=turkcedublaj
+          chiakiKeyAlias=turkcedublaj
+          chiakiKeyPW=turkcedublaj
+          PROPS
+
+      - name: APK derle
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: APK'yı adlandır
+        run: |
+          mkdir -p cikti
+          cp android/app/build/outputs/apk/release/*.apk cikti/PS5-Turkce-Dublaj.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PS5-Turkce-Dublaj
+          path: cikti/PS5-Turkce-Dublaj.apk
+
+      - name: İndirme sayfasına koy (Releases)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: surum-${{ github.run_number }}
+          name: PS5 Türkçe Dublaj - Sürüm ${{ github.run_number }}
+          files: cikti/PS5-Turkce-Dublaj.apk
+          body: |
+            TV'ye veya telefona kurmak için PS5-Turkce-Dublaj.apk dosyasını indirin.
