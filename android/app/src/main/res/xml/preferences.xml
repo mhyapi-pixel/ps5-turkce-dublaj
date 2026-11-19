@@ -7,7 +7,7 @@
         app:title="@string/preferences_category_title_general">
         <Preference
             app:key="turkce_dublaj"
-            app:title="Türkçe Dublaj (ElevenLabs)"
+            app:title="Türkçe Dublaj"
             app:summary="API anahtarı, ses kalitesi, anlatıcı sesi, karakterler"
             app:icon="@drawable/ic_settings">
             <intent

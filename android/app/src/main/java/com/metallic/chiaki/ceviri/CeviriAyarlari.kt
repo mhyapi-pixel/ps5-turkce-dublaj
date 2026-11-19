@@ -29,21 +29,21 @@ class CeviriAyarlari(context: Context)
 		get() = sp.getBoolean("ustune_kapat", false)
 		set(v) = sp.edit().putBoolean("ustune_kapat", v).apply()
 
-	/** ElevenLabs API anahtarı (sadece bu cihazda saklanır). */
-	val elevenLabsAnahtari: String
-		get() = sp.getString("elevenlabs_anahtar", "")?.trim() ?: ""
+	/** Google Cloud Text-to-Speech API anahtarı (sadece bu cihazda saklanır). */
+	val googleAnahtari: String
+		get() = sp.getString("google_anahtar", "")?.trim() ?: ""
 
-	/** ElevenLabs ses modeli. */
-	val sesModeli: String
-		get() = sp.getString("ses_modeli", "eleven_multilingual_v2") ?: "eleven_multilingual_v2"
+	/** Aylık karakter sınırı: Google'ın ücretsiz 1 milyonunun altında tutulur, asla ücret çıkmaz. */
+	val aylikSinir: Long
+		get() = sp.getString("aylik_sinir", "900000")?.toLongOrNull() ?: 900_000L
 
-	/** Konuşma hızı (ElevenLabs: 0.7 – 1.2). */
+	/** Konuşma hızı (1.0 = normal). */
 	val konusmaHizi: Float
-		get() = sp.getString("konusma_hizi", "1.08")?.toFloatOrNull() ?: 1.08f
+		get() = sp.getString("konusma_hizi", "1.0")?.toFloatOrNull() ?: 1.0f
 
 	/** Adı konuşmacı olarak geçmeyen satırları okuyan anlatıcı sesi. */
 	val anlaticiSesi: String
-		get() = sp.getString("anlatici_ses", ElevenLabsSesler.VARSAYILAN_ANLATICI) ?: ElevenLabsSesler.VARSAYILAN_ANLATICI
+		get() = sp.getString("anlatici_ses", GoogleSesler.VARSAYILAN_ANLATICI) ?: GoogleSesler.VARSAYILAN_ANLATICI
 
 	/** Kullanıcının kadın olarak işaretlediği karakter adları (virgülle). */
 	val kadinKarakterler: Set<String>
