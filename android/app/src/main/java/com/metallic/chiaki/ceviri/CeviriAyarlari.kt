@@ -29,21 +29,13 @@ class CeviriAyarlari(context: Context)
 		get() = sp.getBoolean("ustune_kapat", false)
 		set(v) = sp.edit().putBoolean("ustune_kapat", v).apply()
 
-	/** Google Cloud Text-to-Speech API anahtarı (sadece bu cihazda saklanır). */
-	val googleAnahtari: String
-		get() = sp.getString("google_anahtar", "")?.trim() ?: ""
-
-	/** Aylık karakter sınırı: Google'ın ücretsiz 1 milyonunun altında tutulur, asla ücret çıkmaz. */
-	val aylikSinir: Long
-		get() = sp.getString("aylik_sinir", "900000")?.toLongOrNull() ?: 900_000L
-
 	/** Konuşma hızı (1.0 = normal). */
 	val konusmaHizi: Float
 		get() = sp.getString("konusma_hizi", "1.0")?.toFloatOrNull() ?: 1.0f
 
 	/** Adı konuşmacı olarak geçmeyen satırları okuyan anlatıcı sesi. */
 	val anlaticiSesi: String
-		get() = sp.getString("anlatici_ses", GoogleSesler.VARSAYILAN_ANLATICI) ?: GoogleSesler.VARSAYILAN_ANLATICI
+		get() = sp.getString("anlatici_ses", PiperSesler.VARSAYILAN_ANLATICI) ?: PiperSesler.VARSAYILAN_ANLATICI
 
 	/** Kullanıcının kadın olarak işaretlediği karakter adları (virgülle). */
 	val kadinKarakterler: Set<String>

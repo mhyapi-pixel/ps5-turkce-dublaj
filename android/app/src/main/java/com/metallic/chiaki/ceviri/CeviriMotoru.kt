@@ -57,7 +57,7 @@ class CeviriMotoru(
 			.setTargetLanguage(TranslateLanguage.TURKISH)
 			.build())
 
-	private val dublaj = GoogleDublaj(context, ayarlar)
+	private val dublaj = YerelDublaj(context, ayarlar)
 
 	/** Bir kez çevrilen yazı tekrar çevrilmez: menüler, eşya adları anında gelir. */
 	private val onbellek = object: LinkedHashMap<String, String>(256, 0.75f, true)

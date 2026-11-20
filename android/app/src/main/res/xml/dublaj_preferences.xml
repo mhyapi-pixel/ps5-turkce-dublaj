@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="Ses (Google Chirp 3 HD)">
-        <EditTextPreference
-            app:key="google_anahtar"
-            app:title="Google ses anahtarı"
-            app:dialogTitle="API anahtarını yapıştırın"/>
+    <PreferenceCategory app:title="Sesler (ücretsiz, internetsiz)">
+        <Preference
+            app:key="ses_paketleri"
+            app:title="Ses paketlerini indir"
+            app:summary="3 erkek sesi, toplam ~190 MB. Bir kez indirilir, sonra internet gerekmez."/>
 
         <ListPreference
             app:key="anlatici_ses"
             app:title="Anlatıcı sesi"
             app:summary="%s"
-            app:defaultValue="Charon"
+            app:defaultValue="fahrettin"
             app:entries="@array/dublaj_anlatici_adlari"
             app:entryValues="@array/dublaj_anlatici_degerleri"/>
 
@@ -23,24 +23,11 @@
             app:entries="@array/dublaj_hiz_adlari"
             app:entryValues="@array/dublaj_hiz_degerleri"/>
 
-        <ListPreference
-            app:key="aylik_sinir"
-            app:title="Aylık ücretsiz kullanım sınırı"
-            app:summary="%s — sınır dolunca TV'nin kendi sesine geçilir, ücret çıkmaz"
-            app:defaultValue="900000"
-            app:entries="@array/dublaj_sinir_adlari"
-            app:entryValues="@array/dublaj_sinir_degerleri"/>
-
         <EditTextPreference
             app:key="kadin_karakterler"
             app:title="Kadın karakterler"
             app:summary="Altyazıda adı geçen kadın karakterleri virgülle yazın (örn: Ellie, Abby). Bilinen karakterler zaten tanınır."
             app:dialogTitle="Kadın karakter adları"/>
-
-        <Preference
-            app:key="kota_durumu"
-            app:title="Bu ay kullanılan"
-            app:selectable="false"/>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="Ekran">

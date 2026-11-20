@@ -36,6 +36,37 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;28.2.13676358" "cmake;3.22.1" "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Türkçe ses motoru ve ses paketleri
+        run: |
+          set -e
+          mkdir -p android/app/libs ses/paket ses/cikti
+          curl -sSL -o android/app/libs/sherpa-onnx-1.13.7.aar https://github.com/k2-fsa/sherpa-onnx/releases/download/v1.13.7/sherpa-onnx-1.13.7.aar
+          A=android/app/src/main/assets/piper
+          mkdir -p $A
+          for v in dfki fahrettin fettah; do
+            curl -sSL -o ses/$v.tar.bz2 https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-tr_TR-$v-medium.tar.bz2
+            tar xjf ses/$v.tar.bz2 -C ses/paket
+            D=ses/paket/vits-piper-tr_TR-$v-medium
+            cp $D/tokens.txt $A/tokens-$v.txt
+            cp $D/tr_TR-$v-medium.onnx ses/cikti/tr-$v.onnx
+          done
+          # espeak-ng sözlüğü: sadece Türkçe için gerekenler (~2 MB)
+          E=ses/paket/vits-piper-tr_TR-dfki-medium/espeak-ng-data
+          mkdir -p $A/espeak-ng-data
+          for f in $(ls $E | grep -v '_dict$'); do cp -r $E/$f $A/espeak-ng-data/; done
+          cp $E/tr_dict $A/espeak-ng-data/
+          du -sh $A ses/cikti/*
+
+      - name: Ses paketlerini indirme sayfasına koy (bir kez)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view ses-paketi >/dev/null 2>&1; then
+            echo "Ses paketi zaten yüklü"
+          else
+            gh release create ses-paketi ses/cikti/*.onnx --title "Ses paketleri (Piper Türkçe)" --notes "Uygulama bu dosyaları kendisi indirir; elle indirmenize gerek yok." --latest=false
+          fi
+
       - name: İmza ayarı
         working-directory: android
         run: |

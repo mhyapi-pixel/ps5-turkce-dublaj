@@ -1,22 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="dublaj_anlatici_adlari">
-        <item>Charon – derin erkek anlatıcı</item>
-        <item>Fenrir – sert, heyecanlı erkek</item>
-        <item>Puck – genç, canlı erkek</item>
-        <item>Orus – olgun erkek</item>
-        <item>Kore – net kadın sesi</item>
-        <item>Aoede – sıcak kadın sesi</item>
-        <item>Leda – genç kadın sesi</item>
+        <item>Fahrettin – olgun erkek</item>
+        <item>Kerem – net anlatıcı</item>
+        <item>Fettah – derin erkek</item>
     </string-array>
     <string-array name="dublaj_anlatici_degerleri">
-        <item>Charon</item>
-        <item>Fenrir</item>
-        <item>Puck</item>
-        <item>Orus</item>
-        <item>Kore</item>
-        <item>Aoede</item>
-        <item>Leda</item>
+        <item>fahrettin</item>
+        <item>dfki</item>
+        <item>fettah</item>
     </string-array>
 
     <string-array name="dublaj_hiz_adlari">
@@ -28,16 +20,5 @@
         <item>1.0</item>
         <item>1.1</item>
         <item>1.2</item>
-    </string-array>
-
-    <string-array name="dublaj_sinir_adlari">
-        <item>900.000 karakter (önerilen)</item>
-        <item>500.000 karakter</item>
-        <item>250.000 karakter</item>
-    </string-array>
-    <string-array name="dublaj_sinir_degerleri">
-        <item>900000</item>
-        <item>500000</item>
-        <item>250000</item>
     </string-array>
 </resources>

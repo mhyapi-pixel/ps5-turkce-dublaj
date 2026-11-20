@@ -20,6 +20,11 @@ def chiakiVersion = "$chiakiVersionMajor.$chiakiVersionMinor.$chiakiVersionPatch
 println("Determined Chiaki Version: $chiakiVersion")
 
 android {
+    packagingOptions {
+        jniLibs {
+            pickFirsts += ['**/libc++_shared.so', '**/libonnxruntime.so']
+        }
+    }
     namespace "com.metallic.chiaki"
     compileSdk 35
     ndkVersion "28.2.13676358"
@@ -135,6 +140,9 @@ dependencies {
     // Türkçe dublaj: cihaz içi yazı okuma ve çeviri (ücretsiz, internetsiz)
     implementation 'com.google.mlkit:text-recognition:16.0.1'
     implementation 'com.google.mlkit:translate:17.0.3'
+
+    // Türkçe dublaj: ücretsiz, cihaz içi Piper sesleri (sherpa-onnx, CI'da indirilir)
+    implementation files('libs/sherpa-onnx-1.13.7.aar')
 
     testImplementation 'junit:junit:4.13.2'
 }
