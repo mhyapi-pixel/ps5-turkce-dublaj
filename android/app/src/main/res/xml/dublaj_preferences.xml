@@ -1,6 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory app:title="Gemini: duygulu ve akıllı dublaj (ücretsiz)">
+        <EditTextPreference
+            app:key="gemini_anahtar"
+            app:title="Gemini API anahtarı"
+            app:dialogTitle="aistudio.google.com/app/apikey adresinden kopyaladığınız anahtarı yapıştırın"/>
+
+        <Preference
+            app:key="gemini_dene"
+            app:title="Anahtarı dene"
+            app:summary="Örnek bir oyun cümlesini çevirip kadın/erkek ve duygusunu bulur"/>
+
+        <SwitchPreference
+            app:key="gemini_ses"
+            app:title="Gemini sesiyle oku"
+            app:summary="En gerçekçi, duygulu ses. Ücretsiz günlük sınırı düşüktür; dolunca aşağıdaki seslerle devam edilir."
+            app:defaultValue="true"/>
+
+        <Preference
+            app:key="ogrenilenleri_sil"
+            app:title="Öğrenilen karakterleri unut"
+            app:summary="Gemini'nin karakterler için bulduğu kadın/erkek bilgisini sıfırlar"/>
+    </PreferenceCategory>
+
     <PreferenceCategory app:title="Sesler (ücretsiz, internetsiz)">
         <Preference
             app:key="ses_paketleri"

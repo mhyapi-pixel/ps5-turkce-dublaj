@@ -42,6 +42,29 @@ class CeviriAyarlari(context: Context)
 		get() = (sp.getString("kadin_karakterler", "") ?: "")
 			.split(',').map { it.trim().uppercase() }.filter { it.isNotEmpty() }.toSet()
 
+	/** Google AI Studio'dan alınan ücretsiz Gemini API anahtarı (boşsa Gemini kullanılmaz). */
+	val geminiAnahtari: String
+		get() = (sp.getString("gemini_anahtar", "") ?: "").trim()
+
+	/** Gemini'nin duygulu sesini kullan (ücretsiz günlük sınırı düşüktür; dolunca TV sesleri devreye girer). */
+	val geminiSesi: Boolean
+		get() = sp.getBoolean("gemini_ses", true)
+
+	/** Gemini'nin karakterler için bulduğu cinsiyet ("AD" -> kadın mı). */
+	fun ogrenilenCinsiyet(adBuyuk: String): Boolean? =
+		if(sp.contains("cinsiyet_$adBuyuk")) sp.getBoolean("cinsiyet_$adBuyuk", false) else null
+
+	fun cinsiyetOgren(adBuyuk: String, kadin: Boolean) =
+		sp.edit().putBoolean("cinsiyet_$adBuyuk", kadin).apply()
+
+	/** Öğrenilen tüm karakter cinsiyetlerini sil. */
+	fun ogrenilenleriSil()
+	{
+		val e = sp.edit()
+		sp.all.keys.filter { it.startsWith("cinsiyet_") }.forEach { e.remove(it) }
+		e.apply()
+	}
+
 	/** Ekranın alttan ne kadarı altyazı bölgesi sayılsın (0.30 = alt %30). */
 	val altyaziBolgesi: Float
 		get() = sp.getFloat("altyazi_bolgesi", 0.30f)

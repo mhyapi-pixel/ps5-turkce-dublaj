@@ -17,10 +17,11 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Tamamen ücretsiz ve internetsiz Türkçe dublaj.
- * Erkek karakterler ve anlatıcı: Piper sesleri (TV'nin içinde üretilir).
- * Kadın karakterler: TV'nin kendi Türkçe sesi.
- * Piper sesi indirilmemişse her şeyi TV'nin kendi sesi okur.
+ * Türkçe dublaj.
+ * Gemini anahtarı girildiyse: altyazı Gemini ile doğal Türkçeye çevrilir, konuşanın kadın/erkek
+ * olduğu ve duygusu bulunur; ücretsiz ses kotası yettikçe Gemini'nin duygulu sesiyle okunur.
+ * Kota dolunca ya da internet yoksa TV içindeki seslerle devam eder (duyguya göre hız/perde ayarlı):
+ * Erkek karakterler ve anlatıcı: Piper sesleri. Kadın karakterler: TV'nin kendi Türkçe sesi.
  */
 class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarlari)
 {
@@ -64,6 +65,31 @@ class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarl
 		.setTransferMode(AudioTrack.MODE_STREAM)
 		.build()
 
+	/** Gemini sesleri 24 kHz gelir; ayrı bir çıkış kullanılır. */
+	private val geminiSes: AudioTrack = AudioTrack.Builder()
+		.setAudioAttributes(AudioAttributes.Builder()
+			.setUsage(AudioAttributes.USAGE_GAME)
+			.setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+			.build())
+		.setAudioFormat(AudioFormat.Builder()
+			.setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+			.setSampleRate(GeminiBeyin.SES_ORNEKLEME)
+			.setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+			.build())
+		.setBufferSizeInBytes(maxOf(AudioTrack.getMinBufferSize(GeminiBeyin.SES_ORNEKLEME, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_FLOAT), 16384))
+		.setTransferMode(AudioTrack.MODE_STREAM)
+		.build()
+
+	/** İnternet istekleri ayrı iş parçacığında: Piper seslendirmesini bekletmez. */
+	private val ag = Executors.newSingleThreadExecutor()
+
+	/** Aynı satır tekrar gelirse Gemini'ye yeniden sorulmaz (kota korunur). */
+	private val analizler = object: LinkedHashMap<String, Analiz>(256, 0.75f, true)
+	{
+		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Analiz>?) = size > 2000
+	}
+	private val sonSatirlar = ArrayDeque<String>()
+
 	// ---- TV'nin kendi Türkçe sesi ----
 	@Volatile private var tvHazir = false
 	private lateinit var tv: TextToSpeech
@@ -98,30 +124,142 @@ class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarl
 		return if(ayarlar.anlaticiSesi in indirilen) ayarlar.anlaticiSesi else indirilen.first()
 	}
 
-	/** Türkçe cümleyi seslendirir. Önceki cümle hâlâ okunuyorsa keser. */
-	fun oku(metin: String, konusmaci: String?)
+	/**
+	 * İngilizce altyazı satırını Türkçe seslendirir. Önceki satır hâlâ okunuyorsa keser.
+	 * @param yedekCeviri Gemini kullanılamazsa cihaz içi çeviri (ML Kit)
+	 */
+	fun seslendir(ingilizce: String, konusmaci: String?, yedekCeviri: (String, (String) -> Unit) -> Unit)
 	{
 		if(!ayarlar.dublaj)
 			return
 		val benim = nesil.incrementAndGet()
 		kes()
+		val ad = konusmaci?.trim()?.uppercase()?.takeIf { it.isNotEmpty() }
+		val anahtar = ayarlar.geminiAnahtari
 
-		val ad = konusmaci?.trim()?.uppercase()
-		val kadin = ad != null && Karakterler.kadinMi(ad, ayarlar)
+		if(anahtar.isEmpty() || !GeminiBeyin.metinKullanilabilir())
+		{
+			yedekIleOku(benim, ingilizce, ad, yedekCeviri)
+			return
+		}
+		ag.execute {
+			if(!guncelMi(benim))
+				return@execute
+			val onbellekAnahtari = "${ad ?: ""}|$ingilizce"
+			val analiz: Analiz? = synchronized(analizler) { analizler[onbellekAnahtari] }
+				?: analizIste(anahtar, ingilizce, ad)?.also { yeni -> synchronized(analizler) { analizler[onbellekAnahtari] = yeni } }
+			synchronized(sonSatirlar) {
+				sonSatirlar.addLast((if(ad != null) "$ad: " else "") + ingilizce)
+				while(sonSatirlar.size > 4) sonSatirlar.removeFirst()
+			}
+			if(!guncelMi(benim))
+				return@execute
+			if(analiz == null)
+			{
+				yedekIleOku(benim, ingilizce, ad, yedekCeviri)
+				return@execute
+			}
+
+			// Adı geçen karakterin cinsiyeti öğrenilir: sonraki sahnelerde de aynı ses
+			val bilinen = ad?.let { Karakterler.cinsiyet(it, ayarlar) }
+			if(ad != null && bilinen == null && analiz.kadin != null)
+				Karakterler.ogren(ad, analiz.kadin, ayarlar)
+			val kadin = bilinen ?: analiz.kadin
+
+			if(ayarlar.geminiSesi && GeminiBeyin.sesKullanilabilir() && geminiIleOku(benim, anahtar, analiz, ad, kadin))
+				return@execute
+			if(guncelMi(benim))
+				yerelOku(benim, analiz.turkce, ad, kadin, analiz.duygu)
+		}
+	}
+
+	private fun analizIste(anahtar: String, ingilizce: String, ad: String?): Analiz?
+	{
+		val baglam = synchronized(sonSatirlar) { sonSatirlar.toList() }
+		return try
+		{
+			GeminiBeyin.analiz(anahtar, ingilizce, ad, baglam)
+		}
+		catch(e: GeminiBeyin.KotaDoldu)
+		{
+			uyar("Gemini günlük sınırı doldu; cihaz içi çeviri ve seslerle devam ediliyor.")
+			null
+		}
+	}
+
+	private fun sesIste(anahtar: String, analiz: Analiz, sesAdi: String): FloatArray?
+	{
+		return try
+		{
+			GeminiBeyin.seslendir(anahtar, analiz.turkce, sesAdi, analiz.duygu)
+		}
+		catch(e: GeminiBeyin.KotaDoldu)
+		{
+			uyar("Gemini ses sınırı doldu; TV içindeki seslerle devam ediliyor.")
+			null
+		}
+	}
+
+	private fun yedekIleOku(n: Int, ingilizce: String, ad: String?, yedekCeviri: (String, (String) -> Unit) -> Unit)
+	{
+		yedekCeviri(ingilizce) { turkce ->
+			if(guncelMi(n))
+				yerelOku(n, turkce, ad, ad?.let { Karakterler.cinsiyet(it, ayarlar) }, "sakin")
+		}
+	}
+
+	/** @return true: Gemini sesiyle okundu (ya da bu arada yeni satır geldi) */
+	private fun geminiIleOku(n: Int, anahtar: String, analiz: Analiz, ad: String?, kadin: Boolean?): Boolean
+	{
+		val sesAdi = GeminiBeyin.sesSec(ad, kadin)
+		val onbellekAnahtari = "gemini|$sesAdi|${analiz.duygu}|${analiz.turkce}"
+		val hazir: FloatArray? = synchronized(onbellek) { onbellek[onbellekAnahtari] }
+		val veri: FloatArray = hazir ?: (sesIste(anahtar, analiz, sesAdi) ?: return false).also { yeni ->
+			synchronized(onbellek) {
+				onbellek[onbellekAnahtari] = yeni
+				onbellekBoyutu += yeni.size * 4
+			}
+		}
+		if(!guncelMi(n))
+			return true
+		isci.execute { cal(n, veri, geminiSes, ayarlar.konusmaHizi) }
+		return true
+	}
+
+	/** Duyguya göre konuşma hızı ve ses perdesi çarpanları (TV içi sesler için). */
+	private fun duyguAyari(duygu: String): Pair<Float, Float> = when(duygu)
+	{
+		"ofkeli" -> Pair(1.12f, 0.94f)
+		"uzgun" -> Pair(0.86f, 0.95f)
+		"korkmus" -> Pair(1.14f, 1.08f)
+		"neseli" -> Pair(1.06f, 1.06f)
+		"heyecanli" -> Pair(1.16f, 1.05f)
+		"fisilti" -> Pair(0.88f, 0.92f)
+		"alayci" -> Pair(0.96f, 1.02f)
+		"yorgun" -> Pair(0.84f, 0.93f)
+		else -> Pair(1.0f, 1.0f)
+	}
+
+	private fun yerelOku(benim: Int, metin: String, ad: String?, kadinIpucu: Boolean?, duygu: String)
+	{
+		val (duyguHiz, duyguPerde) = duyguAyari(duygu)
+		val kadin = kadinIpucu == true
 		val ozelHiz = if(ad == null) 1.0f else 0.94f + ((ad.hashCode() and 0xff) / 255f) * 0.12f
-		val hiz = ayarlar.konusmaHizi * ozelHiz
+		val hiz = ayarlar.konusmaHizi * ozelHiz * duyguHiz
 
 		if(kadin)
 		{
-			tvOku(metin, perde = 1.0f + ((ad!!.hashCode() and 0x7) / 7f) * 0.15f, hiz = hiz)
+			val perde = 1.0f + (((ad?.hashCode() ?: 0) and 0x7) / 7f) * 0.15f
+			anaHandler.post { if(guncelMi(benim)) tvOku(metin, perde * duyguPerde, hiz) }
 			return
 		}
 
+		val konusan = ad != null || kadinIpucu == false
 		val indirilen = PiperSesler.indirilenler(context).map { it.kod }
 		if(indirilen.isEmpty())
 		{
 			// Ses paketi yok: erkek karakterleri TV sesi biraz kalın okur
-			tvOku(metin, perde = if(ad == null) 1.0f else 0.82f, hiz = hiz)
+			anaHandler.post { if(guncelMi(benim)) tvOku(metin, (if(konusan) 0.82f else 1.0f) * duyguPerde, hiz) }
 			return
 		}
 		val kod = if(ad == null) anlaticiKodu()!!
@@ -143,19 +281,24 @@ class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarl
 	{
 		sustur()
 		isci.shutdownNow()
+		ag.shutdownNow()
 		try { ses.release() } catch(e: Exception) {}
+		try { geminiSes.release() } catch(e: Exception) {}
 		try { tv.shutdown() } catch(e: Exception) {}
 		PiperSesler.hepsiniBirak()
 	}
 
 	private fun kes()
 	{
-		try
+		for(t in arrayOf(ses, geminiSes))
 		{
-			ses.pause()
-			ses.flush()
+			try
+			{
+				t.pause()
+				t.flush()
+			}
+			catch(e: Exception) {}
 		}
-		catch(e: Exception) {}
 		if(tvHazir)
 			tv.stop()
 	}
@@ -176,7 +319,7 @@ class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarl
 		if(!guncelMi(n))
 			return
 		val anahtar = "$kod|$hiz|$metin"
-		synchronized(onbellek) { onbellek[anahtar] }?.let { cal(n, it); return }
+		synchronized(onbellek) { onbellek[anahtar] }?.let { cal(n, it, ses, 1.0f); return }
 
 		val motor = PiperSesler.motor(context, kod)
 		if(motor == null)
@@ -215,16 +358,23 @@ class YerelDublaj(private val context: Context, private val ayarlar: CeviriAyarl
 		}
 	}
 
-	private fun cal(n: Int, veri: FloatArray)
+	private fun cal(n: Int, veri: FloatArray, cikis: AudioTrack, hiz: Float)
 	{
 		if(!guncelMi(n))
 			return
-		ses.play()
+		try
+		{
+			// Gemini sesinde konuşma hızı ayarı oynatma hızıyla uygulanır
+			if(cikis === geminiSes)
+				cikis.playbackParams = cikis.playbackParams.setSpeed(hiz.coerceIn(0.5f, 2.0f))
+		}
+		catch(e: Exception) {}
+		cikis.play()
 		var i = 0
 		while(i < veri.size && guncelMi(n))
 		{
 			val adim = minOf(4096, veri.size - i)
-			ses.write(veri, i, adim, AudioTrack.WRITE_BLOCKING)
+			cikis.write(veri, i, adim, AudioTrack.WRITE_BLOCKING)
 			i += adim
 		}
 	}

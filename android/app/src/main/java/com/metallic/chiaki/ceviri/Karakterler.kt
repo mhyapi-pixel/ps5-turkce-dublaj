@@ -18,7 +18,20 @@ object Karakterler
 		"MERYL", "KAINE", "2B", "A2", "DEVOLA", "POPOLA", "LYDIA", "SERANA", "SAEKO", "MIKU"
 	)
 
-	fun kadinMi(adBuyuk: String, ayarlar: CeviriAyarlari): Boolean =
-		adBuyuk in ayarlar.kadinKarakterler || adBuyuk in BILINEN_KADINLAR ||
-			adBuyuk.split(' ').any { it in BILINEN_KADINLAR }
+	fun kadinMi(adBuyuk: String, ayarlar: CeviriAyarlari): Boolean = cinsiyet(adBuyuk, ayarlar) == true
+
+	/**
+	 * true: kadın, false: erkek, null: henüz bilinmiyor.
+	 * Sıra: kullanıcının yazdığı kadın listesi → bilinen kadın adları → Gemini'den öğrenilenler.
+	 */
+	fun cinsiyet(adBuyuk: String, ayarlar: CeviriAyarlari): Boolean?
+	{
+		if(adBuyuk in ayarlar.kadinKarakterler || adBuyuk in BILINEN_KADINLAR ||
+			adBuyuk.split(' ').any { it in BILINEN_KADINLAR })
+			return true
+		return ayarlar.ogrenilenCinsiyet(adBuyuk)
+	}
+
+	/** Gemini'nin bulduğu cinsiyeti hatırla: karakter her sahnede aynı sesle konuşsun. */
+	fun ogren(adBuyuk: String, kadin: Boolean, ayarlar: CeviriAyarlari) = ayarlar.cinsiyetOgren(adBuyuk, kadin)
 }

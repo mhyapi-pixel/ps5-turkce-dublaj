@@ -214,11 +214,14 @@ class CeviriMotoru(
 			return
 		sonAltyazi = metin
 
-		val hazir = synchronized(onbellek) { onbellek[metin] }
-		if(hazir != null)
-			dublaj.oku(hazir, konusmaci)
-		else
-			cevir(metin) { turkce -> if(sonAltyazi == metin) dublaj.oku(turkce, konusmaci) }
+		// Gemini anahtarı varsa: doğal çeviri + kadın/erkek + duygu. Yoksa cihaz içi çeviri.
+		dublaj.seslendir(metin, konusmaci) { ingilizce, bitince ->
+			val hazir = synchronized(onbellek) { onbellek[ingilizce] }
+			if(hazir != null)
+				bitince(hazir)
+			else
+				cevir(ingilizce) { turkce -> if(sonAltyazi == ingilizce) bitince(turkce) }
+		}
 	}
 
 	private fun altyaziBolgesindeMi(x: Float, y: Float, genislik: Float): Boolean
