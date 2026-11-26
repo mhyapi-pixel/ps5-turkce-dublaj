@@ -12,16 +12,16 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -89,13 +89,13 @@ jobs:
           mkdir -p cikti
           cp android/app/build/outputs/apk/release/*.apk cikti/PS5-Turkce-Dublaj.apk
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: PS5-Turkce-Dublaj
           path: cikti/PS5-Turkce-Dublaj.apk
 
       - name: İndirme sayfasına koy (Releases)
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: surum-${{ github.run_number }}
           name: PS5 Türkçe Dublaj - Sürüm ${{ github.run_number }}
