@@ -36,6 +36,25 @@
                 />
         </provider>
 
+        <provider
+            android:name=".ceviri.HataKaydi"
+            android:authorities="com.turkcedublaj.ps5.hatakaydi"
+            android:exported="false"
+            android:initOrder="1000"/>
+
+        <activity
+            android:name=".ceviri.HataRaporuActivity"
+            android:label="Dublaj Hata Raporu"
+            android:process=":rapor"
+            android:theme="@android:style/Theme.DeviceDefault"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ceviri.DublajAyarlariActivity"
             android:label="Türkçe Dublaj"

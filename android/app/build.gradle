@@ -30,6 +30,7 @@ android {
     ndkVersion "28.2.13676358"
 
     defaultConfig {
+        ndk { abiFilters 'armeabi-v7a', 'arm64-v8a' }
         applicationId "com.turkcedublaj.ps5"
         minSdk 24
         targetSdk 35

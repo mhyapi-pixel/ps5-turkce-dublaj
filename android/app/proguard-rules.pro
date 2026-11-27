@@ -89,3 +89,6 @@
     <init>(...);
     <fields>;
 }
+
+# Türkçe dublaj: sherpa-onnx JNI sınıfları (yerelden alan adlarıyla erişiliyor)
+-keep class com.k2fsa.sherpa.onnx.** { *; }
